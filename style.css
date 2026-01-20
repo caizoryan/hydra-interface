@@ -1,0 +1,49 @@
+* {
+	padding: 0;
+	margin: 0;
+	overflow: hidden;
+}
+
+
+html,
+body {
+	height: 100vh;
+	width: 100vw;
+}
+
+
+.fn {
+	background-color: #fff8;
+}
+
+.fn[selected='true'] {
+	background-color: yellow;
+}
+
+body {
+	display: grid;
+	grid-template-columns: 30vw 70vw;
+}
+
+body>* {
+	border: 1px solid red;
+}
+
+iframe {
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 100vw;
+	height: 100vw;
+	z-index: -99;
+}
+
+/* .code { */
+/* 	all: unset; */
+/* 	position: fixed; */
+/* 	width: 100vw; */
+/* 	height: 100vh; */
+/* 	color: white; */
+/* 	font-size: 24px; */
+/* 	font-family: monospace; */
+/* } */
