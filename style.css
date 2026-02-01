@@ -14,9 +14,17 @@ body {
 
 .fn {
 	background-color: #fff8;
+	font-family: monospace;
+	padding: .2em;
+	border-right: 1em;
 }
 
-.fn[selected='true'] {
+.number,
+.string {
+	margin-right: 1em;
+}
+
+*[selected='true'] {
 	background-color: yellow;
 }
 
@@ -37,13 +45,3 @@ iframe {
 	height: 100vw;
 	z-index: -99;
 }
-
-/* .code { */
-/* 	all: unset; */
-/* 	position: fixed; */
-/* 	width: 100vw; */
-/* 	height: 100vh; */
-/* 	color: white; */
-/* 	font-size: 24px; */
-/* 	font-family: monospace; */
-/* } */
