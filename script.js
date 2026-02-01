@@ -175,7 +175,57 @@ let getref = (address, arr) => {
 };
 
 let buffer;
-document.onkeydown = (e) => {
+let port = undefined;
+let cmd = "";
+let initialize_port = async () => {
+	const port = await navigator.serial.requestPort();
+	console.log(port);
+	await port.open({ baudRate: 9600 });
+
+	const textDecoder = new TextDecoderStream();
+	const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+	const reader = textDecoder.readable.getReader();
+
+	// Listen to data coming from the serial device.
+	while (true) {
+		const { value, done } = await reader.read();
+		if (done) {
+			// Allow the serial port to be closed later.
+			reader.releaseLock();
+			break;
+		}
+		value.split("").forEach((e) => {
+			if (e == "\n") {
+				runCmd(cmd);
+				cmd = "";
+			} else cmd += e;
+		});
+	}
+};
+
+let runCmd = (keystroke) => {
+	console.log(keystroke);
+	let cmd = JSON.parse(keystroke);
+	console.log(cmd);
+	if (cmd.KEY1 == "a") {
+		console.log("Inside a", cmd.KEY2);
+		if (cmd.KEY2) {
+			let [cur, curI] = getcurrentref();
+			if (Array.isArray(cur)) {
+				let item = keys[cmd.KEY2.toUpperCase()];
+				if (item) {
+					console.log("ADDING?!");
+					cur.splice(curI + 1, 0, [...item]);
+					updateUI();
+				}
+			}
+		}
+	}
+};
+document.onkeydown = async (e) => {
+	if (e.key == "Q") {
+		if (!port) initialize_port();
+	}
 	if (e.key == "ArrowDown" && !e.shiftKey) {
 		// have strategy functions for what next means in different contexts
 		cursor.goNext();
@@ -290,3 +340,23 @@ function update_page() {
 }
 
 update_page();
+
+// await port.open({ baudRate: 9600 /* pick your baud rate */ });
+// while (port.readable) {
+// 	const reader = port.readable.getReader();
+// 	try {
+// 		while (true) {
+// 			const { value, done } = await reader.read();
+// 			if (done) {
+// 				// |reader| has been canceled.
+// 				break;
+// 			}
+// 			console.log(value);
+// 			// Do something with |value|…
+// 		}
+// 	} catch (error) {
+// 		// Handle |error|…
+// 	} finally {
+// 		reader.releaseLock();
+// 	}
+// }
