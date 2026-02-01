@@ -15,8 +15,8 @@ body {
 .fn {
 	background-color: #fff8;
 	font-family: monospace;
-	padding: .2em;
-	border-right: 1em;
+	padding: .6em;
+	border-left: 1px solid black;
 }
 
 .number,

@@ -22,13 +22,16 @@ let codeData = [
 	["out", "o0"],
 ];
 
+let d = localStorage.getItem("save");
+if (d) codeData = JSON.parse(d);
+
 let compile = (data) => {
 	let str = "const h = new Hydra().synth";
 	str += "\n";
 
 	for (let i = 0; i < data.length; i++) {
 		str += func(data[i]);
-		if (i != data.length - 1) str += ".";
+		if (i != data.length - 1) str += "\n\t.";
 	}
 
 	return str;
@@ -43,7 +46,7 @@ let func = (args) => {
 
 let arg = (a) => typeof a == "number" ? a + "" : Array.isArray(a) ? func(a) : a;
 
-function updateUI(data) {
+function updateUI(data = codeData) {
 	let d = [".dawg"];
 
 	data.forEach((fn, fnI) => {
@@ -140,6 +143,21 @@ cursor.goUp = () => {
 	if (cursor.value().length > 1) cursor.next((e) => (e.pop(), e));
 };
 
+let keys = {
+	"D": ["modulate"],
+	"E": ["modulateScale"],
+	"F": ["modulateRepeat"],
+	"C": ["colorama", 0.5],
+
+	"L": ["shape"],
+	"K": ["noise"],
+	"J": ["src", "o1"],
+
+	"B": ["blend"],
+	"M": ["mult"],
+	"A": ["add"],
+};
+
 let getcurrentref = () => {
 	let curse = cursor.value();
 	if (curse.length == 1) return [codeData, curse[0]];
@@ -156,18 +174,20 @@ let getref = (address, arr) => {
 	return getref(copy, arr[index]);
 };
 
+let buffer;
 document.onkeydown = (e) => {
-	if (e.key == "ArrowDown") {
+	if (e.key == "ArrowDown" && !e.shiftKey) {
 		// have strategy functions for what next means in different contexts
 		cursor.goNext();
 	}
-	if (e.key == "ArrowUp") {
+	if (e.key == "ArrowUp" && !e.shiftKey) {
 		cursor.goPrev();
 	}
 
-	if (e.key == "Enter") {
-		let [ref, refindex] = getcurrentref();
-		if (Array.isArray(ref[refindex])) {
+	let [cur, curI] = getcurrentref();
+
+	if (e.key == "Enter" && !(e.metaKey || e.ctrlKey)) {
+		if (Array.isArray(cur[curI])) {
 			cursor.next((e) => (e.push(0), e));
 		}
 	}
@@ -176,37 +196,65 @@ document.onkeydown = (e) => {
 		cursor.goUp();
 	}
 
-	if (e.key == "ArrowRight") {
-		let [cur, curI] = getcurrentref();
+	if (e.key == "ArrowUp" && e.shiftKey) {
 		if (typeof cur[curI] == "number") {
 			if (e.shiftKey) cur[curI] += .4;
 			else cur[curI] += .1;
-			update_page();
+			updateUI();
 		}
 	}
 
-	if (e.key == "ArrowLeft") {
-		let [cur, curI] = getcurrentref();
+	if (e.key == "ArrowDown" && e.shiftKey) {
 		if (typeof cur[curI] == "number") {
 			if (e.shiftKey) cur[curI] -= .4;
 			else cur[curI] -= .1;
-			update_page();
+			updateUI();
 		}
 	}
 
 	if (e.key == "N") {
-		let [cur, curI] = getcurrentref();
 		if (Array.isArray(cur)) {
 			cur.splice(curI + 1, 0, 0);
-			update_page();
+			updateUI();
+		}
+	}
+
+	if (Array.isArray(cur)) {
+		Object.entries(keys).forEach(([key, item]) => {
+			if (e.key == key) {
+				cur.splice(curI + 1, 0, [...item]);
+				updateUI();
+			}
+		});
+	}
+
+	if (e.key.toLowerCase() == "y") {
+		buffer = cur[curI];
+	}
+
+	if (e.key.toLowerCase() == "p") {
+		if (buffer && Array.isArray(cur)) {
+			cur.splice(curI + 1, 0, Array.isArray(buffer) ? [...buffer] : buffer);
+			updateUI();
+		}
+	}
+
+	if (e.key == "Enter" && (e.metaKey || e.ctrlKey)) {
+		update_page();
+	}
+
+	if (e.key == "x") {
+		if (Array.isArray(cur)) {
+			buffer = cur[curI];
+			cur.splice(curI, 1);
+			updateUI();
 		}
 	}
 
 	if (e.key == "Backspace") {
-		let [cur, curI] = getcurrentref();
 		if (Array.isArray(cur)) {
 			cur.splice(curI, 1);
-			update_page();
+			updateUI();
 		}
 	}
 };
@@ -237,6 +285,7 @@ function update_page() {
 		`;
 
 	updateUI(codeData);
+	localStorage.setItem("save", JSON.stringify(codeData));
 	codeEl.innerHTML = `<pre>${code}</pre>`;
 }
 
